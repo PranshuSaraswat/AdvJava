@@ -1,0 +1,57 @@
+package AdvJava.week2;
+
+import java.sql.*;
+
+public class P2EmployeeDB {
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/dbName", USER = "root", PASS = "";
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+             Statement stmt = conn.createStatement()) {
+
+            // Create table and insert sample data
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS employees (" +
+                    "ID INT PRIMARY KEY, FName VARCHAR(50), LName VARCHAR(50), Project VARCHAR(100), Salary DECIMAL(10, 2))";
+            stmt.executeUpdate(createTableSQL);
+            String insertDataSQL = "INSERT INTO employees (ID, FName, LName, Project, Salary) VALUES " +
+                    "(1, 'Anika', 'Sharma', 'Web Development', 80000), (2, 'Rahul', 'Patel', 'Devops Engineer', 60000), " +
+                    "(3, 'Priya', 'Gupta', 'Web Development', 75000), (4, 'Vivek', 'Kumar', 'Web Development', 50000), " +
+                    "(5, 'Neha', 'Singh', 'Software Engg', 45000), (6, 'Amit', 'Mishra', 'Web Development', 90000), " +
+                    "(7, 'Meera', 'Nair', 'Data Analysis', 40000), (8, 'Rohan', 'Raj', 'Web Development', 70000)";
+            stmt.executeUpdate(insertDataSQL);
+
+            // Display all employees
+            ResultSet rs = stmt.executeQuery("SELECT * FROM employees");
+            System.out.println("\nAll Employees:\nID\tFName\tLName\tProject\tSalary");
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID") + "\t" + rs.getString("FName") + "\t" + rs.getString("LName") +
+                        "\t" + rs.getString("Project") + "\t" + rs.getBigDecimal("Salary"));
+            }
+
+            // Display employees in 'Web Development'
+            rs = stmt.executeQuery("SELECT ID, FName, LName, Salary FROM employees WHERE Project = 'Web Development'");
+            System.out.println("\nEmployees in 'Web Development':\nID\tFName\tLName\tSalary");
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID") + "\t" + rs.getString("FName") + "\t" +
+                        rs.getString("LName") + "\t" + rs.getBigDecimal("Salary"));
+            }
+
+            // Display IDs of employees with salary > 75,000 in 'Web Development'
+            rs = stmt.executeQuery("SELECT ID FROM employees WHERE Salary > 75000 AND Project = 'Web Development'");
+            System.out.println("\nEmployees with Salary > 75,000 in 'Web Development':\nID");
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID"));
+            }
+
+            // Total number of employees with salary < 50,000
+            rs = stmt.executeQuery("SELECT COUNT(*) AS total FROM employees WHERE Salary < 50000");
+            if (rs.next()) {
+                System.out.println("\nTotal employees with Salary < 50,000: " + rs.getInt("total"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
