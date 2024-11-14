@@ -1,0 +1,94 @@
+package AdvJava.week3;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class P1DepartmentDB {
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/dbName", USER = "root", PASS = "";
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+             Statement stmt = conn.createStatement();
+             Scanner sc = new Scanner(System.in)) {
+
+            // Create table
+            String createTableSQL = "CREATE TABLE IF NOT EXISTS Department (" +
+                    "Dept_ID INT PRIMARY KEY, " +
+                    "Name VARCHAR(100), " +
+                    "Year_Established INT, " +
+                    "Head_Name VARCHAR(100), " +
+                    "No_of_Employees INT)";
+            stmt.executeUpdate(createTableSQL);
+
+            // Insert sample data
+            String insertDataSQL = "INSERT INTO Department (Dept_ID, Name, Year_Established, Head_Name, No_of_Employees) VALUES " +
+                    "(1, 'CSE', 2000, 'Anika', 30), " +
+                    "(2, 'ISE', 2000, 'Rahul', 33), " +
+                    "(3, 'Mech', 1995, 'Priya', 29), " +
+                    "(4, 'Civil', 1995, 'Vivek', 35)";
+            stmt.executeUpdate(insertDataSQL);
+
+            // i. Display all departments
+            ResultSet rsAll = stmt.executeQuery("SELECT * FROM Department");
+            System.out.println("\nAll Departments:");
+            printResultSet(rsAll);
+
+            // ii. Filter by year
+            System.out.print("\nEnter the year: ");
+            int year = sc.nextInt();
+            PreparedStatement pStmtYear = conn.prepareStatement("SELECT * FROM Department WHERE Year_Established = ?");
+            pStmtYear.setInt(1, year);
+            ResultSet rsYear = pStmtYear.executeQuery();
+            printResultSet(rsYear);
+
+            // iii. Filter by Dept_ID and Name
+            System.out.print("\nEnter Dept_ID and Name: ");
+            int deptId = sc.nextInt();
+            sc.nextLine(); // Consume newline
+            String deptName = sc.nextLine();
+            PreparedStatement pStmtDept = conn.prepareStatement("SELECT * FROM Department WHERE Dept_ID = ? AND Name = ?");
+            pStmtDept.setInt(1, deptId);
+            pStmtDept.setString(2, deptName);
+            ResultSet rsDept = pStmtDept.executeQuery();
+            printResultSet(rsDept);
+
+            // iv. Insert new department
+            System.out.print("\nEnter new Dept_ID, Name, Year, Head, and Employees: ");
+            int newDeptId = sc.nextInt();
+            sc.nextLine();  // Consume newline
+            String newDeptName = sc.nextLine();
+            int newYear = sc.nextInt();
+            sc.nextLine();  // Consume newline
+            String newHead = sc.nextLine();
+            int newEmployees = sc.nextInt();
+
+            String insertSQL = "INSERT INTO Department (Dept_ID, Name, Year_Established, Head_Name, No_of_Employees) VALUES (?, ?, ?, ?, ?)";
+            PreparedStatement pStmtInsert = conn.prepareStatement(insertSQL);
+            pStmtInsert.setInt(1, newDeptId);
+            pStmtInsert.setString(2, newDeptName);
+            pStmtInsert.setInt(3, newYear);
+            pStmtInsert.setString(4, newHead);
+            pStmtInsert.setInt(5, newEmployees);
+            pStmtInsert.executeUpdate();
+
+            // Display inserted row
+            PreparedStatement pStmtNewDept = conn.prepareStatement("SELECT * FROM Department WHERE Dept_ID = ?");
+            pStmtNewDept.setInt(1, newDeptId);
+            ResultSet rsNewDept = pStmtNewDept.executeQuery();
+            printResultSet(rsNewDept);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void printResultSet(ResultSet rs) throws SQLException {
+        System.out.println("ID\tName\tYear\tHead\tEmployees");
+        while (rs.next()) {
+            System.out.printf("%d\t%s\t%d\t%s\t%d\n", 
+                rs.getInt("Dept_ID"), rs.getString("Name"), 
+                rs.getInt("Year_Established"), rs.getString("Head_Name"), rs.getInt("No_of_Employees"));
+        }
+    }
+}
